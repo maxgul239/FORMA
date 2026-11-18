@@ -242,7 +242,7 @@
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     // ВСТАВЬ СЮДА СВОЙ CLIENT ID ИЗ GOOGLE CLOUD CONSOLE
     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    const GOOGLE_CLIENT_ID = 'ТВОЙ_GOOGLE_CLIENT_ID_ЗДЕСЬ'; 
+    const GOOGLE_CLIENT_ID = '932402711939-oelpbpneuuti15tlq5neusuo6afbgo8n.apps.googleusercontent.com'; 
     const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
     const FILE_NAME = 'forma_app_data.json';
@@ -310,12 +310,8 @@
       
       // Bind login button
       document.getElementById('btnGoogleLogin').onclick = () => {
-        if(GOOGLE_CLIENT_ID === '932402711939-oelpbpneuuti15tlq5neusuo6afbgo8n.apps.googleusercontent.com') {
-          alert('Ошибка: Необходимо вставить свой GOOGLE_CLIENT_ID в исходный код (строка 330).');
-          return;
-        }
-        tokenClient.requestAccessToken({ prompt: 'consent' });
-      };
+         tokenClient.requestAccessToken({ prompt: 'consent' });
+      }
     };
 
     function cycleSlogan() {
