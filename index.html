@@ -1,601 +1,600 @@
 <!DOCTYPE html>
-<html lang="ru" class="dark">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>FORMA — Твой силовой дневник</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'sans-serif'] },
-          colors: {
-            bgDark: '#111215',
-            surfaceDark: '#1a1c21',
-            brand: '#FF6B00',
-          }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FORMA</title>
+    <!-- Официальный скрипт Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        :root {
+            /* Темная тема по умолчанию */
+            --bg: #111215;
+            --surface: #191B1F;
+            --text: #F8F9FA;
+            --text-muted: #868E96;
+            --border: #2C2F36;
+            --primary: #FF6B00; /* Оранжевый акцент */
+            --radius: 12px;
+            --card-red: rgba(250, 82, 82, 0.15);
+            --card-red-border: rgba(250, 82, 82, 0.3);
+            --card-green: rgba(64, 192, 87, 0.15);
+            --card-green-border: rgba(64, 192, 87, 0.3);
         }
-      }
-    }
-  </script>
-  <style>
-    body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    /* Primitive bg pattern for gateway */
-    .gateway-bg {
-      background-image: radial-gradient(circle at 20% 20%, rgba(255, 107, 0, 0.05) 0%, transparent 40%),
-                        radial-gradient(circle at 80% 80%, rgba(255, 107, 0, 0.03) 0%, transparent 40%);
-    }
+        
+        [data-theme="light"] {
+            --bg: #F8F9FA;
+            --surface: #FFFFFF;
+            --text: #212529;
+            --text-muted: #868E96;
+            --border: #E9ECEF;
+            --card-red: rgba(250, 82, 82, 0.08);
+            --card-red-border: rgba(250, 82, 82, 0.2);
+            --card-green: rgba(64, 192, 87, 0.08);
+            --card-green-border: rgba(64, 192, 87, 0.2);
+        }
 
-    /* Modal Backdrop */
-    .modal-backdrop { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); }
-  </style>
+        * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+        body { margin: 0; padding: 0; background-color: var(--bg); color: var(--text); padding-bottom: 140px; transition: background-color 0.3s; }
+        
+        /* Экраны */
+        .screen { display: none; padding: 20px; min-height: 100vh; }
+        .screen.active { display: block; }
+        
+        /* Экран входа */
+        #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; background: radial-gradient(circle at center, var(--surface) 0%, var(--bg) 100%); }
+        .login-box { background: var(--surface); padding: 40px 24px; border-radius: 24px; border: 1px solid var(--border); width: 100%; max-width: 340px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+        .login-title { margin: 0 0 12px 0; font-size: 24px; font-weight: 800; }
+        .login-slogan { color: var(--text-muted); font-size: 14px; margin-bottom: 32px; min-height: 60px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1.4; }
+        .google-btn { background: #FFFFFF; color: #3C4043; border: 1px solid #DADCE0; padding: 12px 24px; border-radius: 20px; font-weight: 600; font-size: 16px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; cursor: pointer; }
+        
+        /* Навигация и Таймер */
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--surface); display: flex; justify-content: space-around; align-items: center; border-top: 1px solid var(--border); z-index: 100; }
+        .nav-item { color: var(--text-muted); font-size: 11px; font-weight: 700; text-align: center; cursor: pointer; flex: 1; padding: 10px 0; display: flex; flex-direction: column; gap: 4px; align-items: center; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item span { font-size: 20px; }
+
+        .timer-bar { position: fixed; bottom: 60px; left: 0; right: 0; height: 60px; background: var(--surface); border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 20px; z-index: 99; display: none; }
+        .timer-info { display: flex; flex-direction: column; }
+        .timer-time { font-size: 22px; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; }
+        .timer-label { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+        .timer-btn { background: var(--text); color: var(--bg); padding: 8px 20px; border-radius: 8px; font-weight: 700; border: none; font-size: 14px; cursor: pointer; }
+
+        /* Календарь */
+        .calendar-scroll { display: flex; overflow-x: auto; gap: 12px; margin-bottom: 20px; padding-bottom: 8px; scroll-scrollbar-width: none; }
+        .calendar-scroll::-webkit-scrollbar { display: none; }
+        .day-chip { padding: 10px 16px; border-radius: 20px; background: var(--surface); color: var(--text-muted); font-weight: 700; white-space: nowrap; border: 1px solid var(--border); cursor: pointer; }
+        .day-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Шапка */
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 24px; font-weight: 800; }
+        .sync-status { font-size: 12px; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+        .sync-dot { width: 8px; height: 8px; background: #51CF66; border-radius: 50%; display: inline-block; }
+
+        /* Карточки упражнений */
+        .ex-card { background: var(--surface); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; border: 1px solid var(--border); transition: 0.2s; cursor: pointer; position: relative; }
+        .ex-card.status-red { background: var(--card-red); border-color: var(--card-red-border); }
+        .ex-card.status-green { background: var(--card-green); border-color: var(--card-green-border); }
+        
+        .ex-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .ex-title { font-weight: 700; font-size: 16px; margin: 0; padding-right: 30px; }
+        .ex-badge { font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; white-space: nowrap; }
+        .status-red .ex-badge { background: rgba(250,82,82,0.2); color: #FF6B6B; }
+        .status-green .ex-badge { background: rgba(64,192,87,0.2); color: #51CF66; }
+
+        .ex-remove { position: absolute; top: 16px; right: 16px; color: var(--text-muted); font-size: 18px; font-weight: bold; cursor: pointer; background: none; border: none; padding: 4px; }
+        
+        .ex-history { margin-top: 12px; font-size: 13px; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 12px; }
+        .history-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+
+        /* Кнопки и формы */
+        .btn { padding: 14px; border-radius: var(--radius); font-weight: 700; font-size: 15px; text-align: center; border: none; width: 100%; cursor: pointer; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 13px; color: var(--text-muted); font-weight: 600; }
+        .form-group input, .form-group select { width: 100%; padding: 14px; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius); outline: none; font-size: 16px; }
+        .form-group input:focus { border-color: var(--primary); }
+
+        /* Loaders & Modals */
+        #loader { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.85); z-index: 200; display: none; align-items: center; justify-content: center; color: white; font-weight: bold; flex-direction: column; gap: 16px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.2); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .modal-overlay { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.6); z-index: 150; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal { background: var(--surface); padding: 24px; border-radius: 20px; width: 90%; max-width: 340px; border: 1px solid var(--border); box-shadow: 0 10px 40px rgba(0,0,0,0.3); }
+        .modal h3 { margin-top: 0; margin-bottom: 20px; font-size: 18px; }
+
+    </style>
 </head>
-<body class="bg-gray-50 dark:bg-bgDark text-gray-900 dark:text-gray-100 transition-colors duration-200 min-h-screen flex justify-center">
+<body>
 
-  <div class="w-full max-w-[480px] min-h-screen relative flex flex-col shadow-2xl bg-white dark:bg-bgDark">
-    
-    <!-- ========================================================= -->
-    <!-- VIEW 1: GATEWAY (LOGIN) -->
-    <!-- ========================================================= -->
-    <div id="view-gateway" class="absolute inset-0 z-50 flex flex-col items-center justify-center p-6 gateway-bg bg-bgDark text-white transition-opacity duration-300">
-      <div class="w-14 h-14 rounded-2xl bg-brand font-extrabold text-2xl flex items-center justify-center mb-4 shadow-lg shadow-brand/20">F</div>
-      <h1 class="text-3xl font-extrabold tracking-tight mb-2">FORMA</h1>
-      <p class="text-sm text-gray-400 font-semibold mb-12 uppercase tracking-widest">Силовой дневник</p>
+    <div id="loader"><div class="spinner"></div><span id="loader-text">Загрузка данных...</span></div>
 
-      <div class="min-h-[60px] flex items-center justify-center mb-12 w-full max-w-sm text-center">
-        <p id="sloganText" class="text-sm font-medium text-gray-300 italic leading-relaxed cursor-pointer transition-opacity duration-300"></p>
-      </div>
-
-      <button id="btnGoogleLogin" class="w-full max-w-xs bg-white text-gray-900 hover:bg-gray-100 font-extrabold text-sm py-3.5 px-4 rounded-xl flex items-center justify-center gap-3 transition-transform active:scale-95 shadow-md">
-        <svg class="w-5 h-5" viewBox="0 0 24 24">
-          <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"/>
-          <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"/>
-          <path fill="#FBBC05" d="M5.3 14.8c-.2-.8-.4-1.8-.4-2.8s.2-2 .4-2.8L1.6 6.4C.6 8.4 0 10.6 0 12s.6 3.6 1.6 5.6l3.7-2.8z"/>
-          <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5l-3.7 2.8C3.5 20.4 7.4 23 12 23z"/>
-        </svg>
-        Войти через Google
-      </button>
-      <p class="text-xs text-gray-500 mt-6 text-center max-w-xs">Синхронизация данных происходит автоматически через твой личный Google Диск</p>
-    </div>
-
-    <!-- ========================================================= -->
-    <!-- VIEW 2: ONBOARDING (PROFILE SETUP) -->
-    <!-- ========================================================= -->
-    <div id="view-onboarding" class="hidden absolute inset-0 z-40 bg-gray-50 dark:bg-bgDark p-6 overflow-y-auto">
-      <div class="mt-6 mb-8">
-        <span class="text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 rounded bg-brand/20 text-brand">Новый профиль</span>
-        <h2 class="text-2xl font-extrabold mt-3">Анкета атлета</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Файл будет создан на твоем Google Диске</p>
-      </div>
-
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Как к тебе обращаться</label>
-          <input id="onbName" type="text" placeholder="Имя" class="w-full bg-white dark:bg-surfaceDark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-brand">
-        </div>
-        <div class="grid grid-cols-3 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Возраст</label>
-            <input id="onbAge" type="number" placeholder="Лет" class="w-full bg-white dark:bg-surfaceDark border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-3 text-sm font-bold text-center outline-none focus:border-brand">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Рост (см)</label>
-            <input id="onbHeight" type="number" placeholder="см" class="w-full bg-white dark:bg-surfaceDark border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-3 text-sm font-bold text-center outline-none focus:border-brand">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Вес (кг)</label>
-            <input id="onbWeight" type="number" step="0.1" placeholder="кг" class="w-full bg-white dark:bg-surfaceDark border border-gray-200 dark:border-gray-800 rounded-xl px-3 py-3 text-sm font-bold text-center outline-none focus:border-brand">
-          </div>
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1">Цель тренировок</label>
-          <select id="onbGoal" class="w-full bg-white dark:bg-surfaceDark border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 text-sm font-bold outline-none focus:border-brand appearance-none">
-            <option value="Масса и сила">Масса и сила</option>
-            <option value="Рельеф и тонус">Рельеф и тонус</option>
-            <option value="Выносливость">Выносливость</option>
-          </select>
-        </div>
-
-        <button onclick="finishOnboarding()" class="w-full mt-4 bg-brand hover:bg-orange-600 text-white font-extrabold text-sm py-3.5 rounded-xl transition-transform active:scale-95 shadow-md">
-          Создать профиль и войти
-        </button>
-      </div>
-    </div>
-
-    <!-- ========================================================= -->
-    <!-- VIEW 3: MAIN APP SHELL -->
-    <!-- ========================================================= -->
-    <div id="view-main" class="hidden flex-1 flex flex-col h-full overflow-hidden">
-      <!-- HEADER -->
-      <header class="px-5 pt-5 pb-3 border-b border-gray-200 dark:border-gray-800 shrink-0 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8 rounded-lg bg-brand text-white font-extrabold flex items-center justify-center text-sm shadow-sm">F</div>
-          <div>
-            <div class="text-sm font-extrabold leading-tight">FORMA</div>
-            <div id="headerStatus" class="text-[10px] font-semibold text-green-600 dark:text-emerald-400 mt-0.5">● Синхронизировано</div>
-          </div>
-        </div>
-      </header>
-
-      <!-- TAB: EXERCISES -->
-      <main id="tab-exercises" class="flex-1 overflow-y-auto p-5 pb-24 space-y-4">
-        <div class="mb-2">
-          <h2 class="text-xl font-extrabold">База упражнений</h2>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Красные карточки еще без подходов. После первой записи упражнение станет освоенным (зеленым).</p>
-        </div>
-        <div id="exercisesListContainer" class="space-y-3">
-          <!-- Populated by JS -->
-        </div>
-      </main>
-
-      <!-- TAB: SETTINGS -->
-      <main id="tab-settings" class="hidden flex-1 overflow-y-auto p-5 pb-24 space-y-4">
-        <h2 class="text-xl font-extrabold mb-4">Настройки профиля</h2>
-        
-        <div class="bg-white dark:bg-surfaceDark border border-gray-200 dark:border-gray-800 rounded-2xl p-4 flex items-center justify-between">
-          <div>
-            <div class="text-sm font-bold">Оформление</div>
-            <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Темная или светлая тема</div>
-          </div>
-          <button onclick="toggleTheme()" class="bg-gray-100 dark:bg-gray-800 text-sm font-bold px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700">
-            Переключить
-          </button>
-        </div>
-
-        <div class="bg-white dark:bg-surfaceDark border border-gray-200 dark:border-gray-800 rounded-2xl p-4 space-y-4">
-          <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
-            <div>
-              <div class="text-sm font-bold">Аккаунт Google</div>
-              <div id="settingsEmail" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">name@gmail.com</div>
-            </div>
-            <button onclick="logout()" class="text-xs font-bold text-red-500 bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-lg">Выйти</button>
-          </div>
-
-          <div class="space-y-3 pt-1">
-            <div class="text-xs font-extrabold uppercase tracking-wider text-gray-400">Личные данные</div>
-            <div>
-              <label class="block text-[10px] font-bold text-gray-500 mb-1">Имя</label>
-              <input id="setpName" type="text" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-sm font-bold outline-none focus:border-brand">
-            </div>
-            <div class="grid grid-cols-3 gap-2">
-              <div>
-                <label class="block text-[10px] font-bold text-gray-500 mb-1">Возраст</label>
-                <input id="setpAge" type="number" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-sm font-bold outline-none focus:border-brand text-center">
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold text-gray-500 mb-1">Рост (см)</label>
-                <input id="setpHeight" type="number" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-sm font-bold outline-none focus:border-brand text-center">
-              </div>
-              <div>
-                <label class="block text-[10px] font-bold text-gray-500 mb-1">Вес (кг)</label>
-                <input id="setpWeight" type="number" step="0.1" class="w-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-2 text-sm font-bold outline-none focus:border-brand text-center">
-              </div>
-            </div>
-            <button onclick="saveSettingsProfile()" class="w-full bg-brand hover:bg-orange-600 text-white font-bold text-xs py-2.5 rounded-lg mt-2 transition-transform active:scale-95">
-              Сохранить параметры
+    <!-- 1. Экран входа -->
+    <div id="login-screen" class="screen active">
+        <div class="login-box">
+            <h2 class="login-title">FORMA</h2>
+            <div class="login-slogan" id="slogan-text" onclick="changeSlogan()"></div>
+            <button class="google-btn" onclick="authWithGoogle()">
+                <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/><path fill="none" d="M1 1h22v22H1z"/></svg>
+                Войти через Google
             </button>
-          </div>
         </div>
-      </main>
-
-      <!-- BOTTOM NAVIGATION -->
-      <nav class="absolute bottom-0 left-0 right-0 bg-white dark:bg-surfaceDark border-t border-gray-200 dark:border-gray-800 px-6 py-3 flex justify-around pb-safe">
-        <button onclick="switchTab('exercises')" id="nav-btn-exercises" class="flex flex-col items-center gap-1 text-brand">
-          <span class="text-xl">🏋️</span>
-          <span class="text-[10px] font-extrabold">Упражнения</span>
-        </button>
-        <button onclick="switchTab('settings')" id="nav-btn-settings" class="flex flex-col items-center gap-1 text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
-          <span class="text-xl">⚙️</span>
-          <span class="text-[10px] font-extrabold">Настройки</span>
-        </button>
-      </nav>
     </div>
-  </div>
 
-  <!-- ========================================================= -->
-  <!-- MODAL: ADD SET -->
-  <!-- ========================================================= -->
-  <div id="modal-add-set" class="hidden fixed inset-0 z-50 modal-backdrop flex items-end justify-center sm:items-center">
-    <div class="w-full max-w-[480px] bg-white dark:bg-surfaceDark rounded-t-3xl sm:rounded-2xl p-5 border-t border-gray-200 dark:border-gray-800 sm:border animate-slide-up">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <div class="text-[10px] font-extrabold text-brand uppercase tracking-wider mb-0.5">Внесение результата</div>
-          <h3 id="modalExTitle" class="text-lg font-extrabold leading-tight">Жим лежа</h3>
-        </div>
-        <button onclick="closeSetModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center font-bold text-gray-500">✕</button>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3 mb-5">
-        <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-3 border border-gray-200 dark:border-gray-800">
-          <label class="block text-[10px] font-extrabold uppercase text-gray-400 mb-1">Рабочий вес (кг)</label>
-          <input id="modalInputWeight" type="number" step="0.5" placeholder="0" class="w-full bg-transparent text-2xl font-extrabold text-center tabular-nums outline-none">
-        </div>
-        <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-3 border border-gray-200 dark:border-gray-800">
-          <label class="block text-[10px] font-extrabold uppercase text-gray-400 mb-1">Повторения</label>
-          <input id="modalInputReps" type="number" step="1" placeholder="0" class="w-full bg-transparent text-2xl font-extrabold text-center tabular-nums outline-none">
-        </div>
-      </div>
-
-      <button onclick="saveSetRecord()" class="w-full bg-brand hover:bg-orange-600 text-white font-extrabold text-sm py-3.5 rounded-xl transition-transform active:scale-95 shadow-md flex items-center justify-center gap-2">
-        <span>✅</span> Сохранить подход
-      </button>
+    <!-- 2. Анкета -->
+    <div id="onboarding-screen" class="screen">
+        <div class="header"><h1>Создание профиля</h1></div>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Ваши данные будут надежно сохранены на вашем Google Диске.</p>
+        <div class="form-group"><label>Имя</label><input type="text" id="reg-name" placeholder="Как к вам обращаться?"></div>
+        <div class="form-group"><label>Возраст</label><input type="number" id="reg-age" placeholder="Лет"></div>
+        <div class="form-group"><label>Рост (см)</label><input type="number" id="reg-height" placeholder="Например, 175"></div>
+        <div class="form-group"><label>Вес (кг)</label><input type="number" id="reg-weight" placeholder="Например, 75"></div>
+        <button class="btn btn-primary" onclick="completeOnboarding()">Начать тренировки</button>
     </div>
-  </div>
 
-  <!-- LOADING OVERLAY -->
-  <div id="global-loader" class="hidden fixed inset-0 z-[100] bg-bgDark/80 backdrop-blur-sm flex flex-col items-center justify-center text-white">
-    <div class="w-10 h-10 border-4 border-brand border-t-transparent rounded-full animate-spin mb-3"></div>
-    <div id="loader-text" class="text-xs font-bold uppercase tracking-wider">Синхронизация...</div>
-  </div>
-
-  <script>
-    // =========================================================================
-    // CONFIGURATION
-    // =========================================================================
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    // ВСТАВЬ СЮДА СВОЙ CLIENT ID ИЗ GOOGLE CLOUD CONSOLE
-    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    const GOOGLE_CLIENT_ID = '932402711939-e56mamqb7ls024p6j2amcqlnpv5bldtk.apps.googleusercontent.com'; 
-    const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
-    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-    const FILE_NAME = 'forma_app_data.json';
-
-    const MOTIVATIONAL_SLOGANS = [
-      "«Сила строится подходом за подходом, неделя за неделей.»",
-      "«Твой единственный соперник — ты сам на прошлой тренировке.»",
-      "«Дисциплина весит граммы, но поднимает тонны.»",
-      "«Фиксируй каждый подход: то, что измеряется — неизбежно растет.»",
-      "«Большие веса покоряются тем, кто уважает технику.»",
-      "«Сделай идеальным сегодняшний подход.»",
-      "«Прогресс любит тишину, тяжелое железо и системный план.»",
-      "«Каждый честный повтор — это вклад в новую форму.»",
-      "«Стабильность побеждает настроение.»",
-      "«Твоя рабочая база сегодня — это разминка через полгода.»"
-    ];
-
-    const BASE_EXERCISES = [
-      { id: 'bench_press', category: 'Грудь', name: 'Жим штанги лежа' },
-      { id: 'incline_db', category: 'Грудь', name: 'Жим гантелей под углом' },
-      { id: 'pullups', category: 'Спина', name: 'Подтягивания' },
-      { id: 'barbell_row', category: 'Спина', name: 'Тяга штанги в наклоне' },
-      { id: 'overhead_press', category: 'Плечи', name: 'Армейский жим стоя' },
-      { id: 'lateral_raises', category: 'Плечи', name: 'Махи гантелями в стороны' },
-      { id: 'bicep_curl', category: 'Бицепс', name: 'Подъем штанги на бицепс' },
-      { id: 'tricep_ext', category: 'Трицепс', name: 'Разгибания на блоке' },
-      { id: 'squat', category: 'Ноги', name: 'Приседания со штангой' },
-      { id: 'deadlift', category: 'Ноги', name: 'Становая тяга' }
-    ];
-
-    // =========================================================================
-    // STATE MANAGEMENT
-    // =========================================================================
-    let tokenClient;
-    let accessToken = null;
-    let driveFileId = null;
-    let appState = {
-      profile: {},
-      logs: {} // { exId: [ {date, weight, reps}, ... ] }
-    };
-    let activeModalExId = null;
-
-    // =========================================================================
-    // INITIALIZATION & UI ROUTING
-    // =========================================================================
-    window.onload = function() {
-      // 1. Setup random slogan
-      cycleSlogan();
-      setInterval(cycleSlogan, 8000);
-      document.getElementById('sloganText').addEventListener('click', cycleSlogan);
-
-      // 2. Init GSI Client
-      tokenClient = google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: SCOPES,
-        callback: handleTokenResponse,
-      });
-
-      // 3. Check sessionStorage for existing token to persist login
-      const savedToken = sessionStorage.getItem('forma_gtoken');
-      if (savedToken) {
-        accessToken = savedToken;
-        checkDriveFile();
-      }
-      
-      // Bind login button
-      document.getElementById('btnGoogleLogin').onclick = () => {
-         tokenClient.requestAccessToken({ prompt: 'consent' });
-      }
-    };
-
-    function cycleSlogan() {
-      const idx = Math.floor(Math.random() * MOTIVATIONAL_SLOGANS.length);
-      const el = document.getElementById('sloganText');
-      el.style.opacity = 0;
-      setTimeout(() => {
-        el.textContent = MOTIVATIONAL_SLOGANS[idx];
-        el.style.opacity = 1;
-      }, 300);
-    }
-
-    function showLoader(text) {
-      document.getElementById('loader-text').textContent = text;
-      document.getElementById('global-loader').classList.remove('hidden');
-    }
-    function hideLoader() {
-      document.getElementById('global-loader').classList.add('hidden');
-    }
-    function setSyncStatus(msg, isErr = false) {
-      const el = document.getElementById('headerStatus');
-      el.textContent = msg;
-      el.className = `text-[10px] font-semibold mt-0.5 ${isErr ? 'text-red-500' : 'text-green-600 dark:text-emerald-400'}`;
-    }
-
-    // =========================================================================
-    // GOOGLE DRIVE API LOGIC
-    // =========================================================================
-    function handleTokenResponse(resp) {
-      if (resp.error) {
-        console.error(resp.error);
-        return;
-      }
-      accessToken = resp.access_token;
-      sessionStorage.setItem('forma_gtoken', accessToken);
-      
-      // Fetch user info just to display email in settings
-      fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      }).then(r => r.json()).then(data => {
-        document.getElementById('settingsEmail').textContent = data.email || 'Подключено';
-      }).catch(e => console.error(e));
-
-      checkDriveFile();
-    }
-
-    async function checkDriveFile() {
-      showLoader('Поиск файла в облаке...');
-      try {
-        const q = encodeURIComponent(`name='${FILE_NAME}' and trashed=false`);
-        const resp = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&spaces=drive`, {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        });
-        const data = await resp.json();
-
-        if (data.files && data.files.length > 0) {
-          driveFileId = data.files[0].id;
-          await loadDataFromDrive();
-        } else {
-          hideLoader();
-          document.getElementById('view-gateway').classList.add('hidden');
-          document.getElementById('view-onboarding').classList.remove('hidden');
-        }
-      } catch (err) {
-        console.error(err);
-        hideLoader();
-        alert('Ошибка при подключении к Google Диску. Проверь консоль.');
-      }
-    }
-
-    async function loadDataFromDrive() {
-      showLoader('Загрузка данных...');
-      try {
-        const resp = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`, {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        });
-        const fileContent = await resp.json();
-        appState = fileContent;
+    <!-- 3. Календарь (Главный экран) -->
+    <div id="calendar-screen" class="screen">
+        <div class="header">
+            <h1>Тренировки</h1>
+            <div class="sync-status" id="sync-indicator"><span class="sync-dot"></span> Облако</div>
+        </div>
         
-        // Ensure logs object exists
-        if(!appState.logs) appState.logs = {};
+        <div class="calendar-scroll" id="calendar-days">
+            <!-- Дни недели генерируются JS -->
+        </div>
 
-        hideLoader();
-        launchMainApp();
-      } catch (err) {
-        console.error(err);
-        hideLoader();
-        alert('Не удалось прочитать файл данных.');
-      }
-    }
-
-    async function saveToDrive() {
-      setSyncStatus('● Синхронизация...');
-      try {
-        if (!driveFileId) {
-          // Create metadata
-          const metaResp = await fetch('https://www.googleapis.com/drive/v3/files', {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: FILE_NAME })
-          });
-          const metaData = await metaResp.json();
-          driveFileId = metaData.id;
-        }
-
-        // Upload content
-        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
-          method: 'PATCH',
-          headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify(appState)
-        });
-
-        setSyncStatus('● Синхронизировано');
-      } catch (err) {
-        console.error('Save error', err);
-        setSyncStatus('⚠️ Ошибка синхронизации', true);
-      }
-    }
-
-    // =========================================================================
-    // ONBOARDING
-    // =========================================================================
-    window.finishOnboarding = async function() {
-      const name = document.getElementById('onbName').value.trim();
-      if (!name) return alert('Укажи имя');
-
-      appState.profile = {
-        name,
-        age: document.getElementById('onbAge').value,
-        height: document.getElementById('onbHeight').value,
-        weight: document.getElementById('onbWeight').value,
-        goal: document.getElementById('onbGoal').value,
-      };
-      appState.logs = {};
-
-      showLoader('Создание файла...');
-      await saveToDrive();
-      hideLoader();
-
-      document.getElementById('view-onboarding').classList.add('hidden');
-      launchMainApp();
-    };
-
-    // =========================================================================
-    // MAIN APP LOGIC
-    // =========================================================================
-    function launchMainApp() {
-      document.getElementById('view-gateway').classList.add('hidden');
-      document.getElementById('view-onboarding').classList.add('hidden');
-      document.getElementById('view-main').classList.remove('hidden');
-      renderExercises();
-      populateSettingsForm();
-    }
-
-    window.switchTab = function(tabName) {
-      document.getElementById('tab-exercises').classList.toggle('hidden', tabName !== 'exercises');
-      document.getElementById('tab-settings').classList.toggle('hidden', tabName !== 'settings');
-
-      document.getElementById('nav-btn-exercises').className = tabName === 'exercises' 
-        ? 'flex flex-col items-center gap-1 text-brand' 
-        : 'flex flex-col items-center gap-1 text-gray-400 hover:text-gray-900 dark:hover:text-gray-200';
-      
-      document.getElementById('nav-btn-settings').className = tabName === 'settings' 
-        ? 'flex flex-col items-center gap-1 text-brand' 
-        : 'flex flex-col items-center gap-1 text-gray-400 hover:text-gray-900 dark:hover:text-gray-200';
-    };
-
-    function renderExercises() {
-      const container = document.getElementById('exercisesListContainer');
-      container.innerHTML = BASE_EXERCISES.map(ex => {
-        const logs = appState.logs[ex.id] || [];
-        const isGreen = logs.length > 0;
+        <h3 id="current-day-title" style="margin-top: 0; margin-bottom: 16px;">Понедельник</h3>
+        <div id="day-exercises-list"></div>
         
-        let contentHtml = '';
-        if (isGreen) {
-          const last5 = logs.slice(-5).reverse();
-          contentHtml = `
-            <div class="mt-3 pt-3 border-t border-emerald-900/10 dark:border-emerald-100/10">
-              <div class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-800 dark:text-emerald-400 mb-1.5">Последние подходы:</div>
-              <div class="flex flex-wrap gap-1.5">
-                ${last5.map(l => `<span class="bg-white dark:bg-surfaceDark border border-emerald-200 dark:border-emerald-800 text-emerald-900 dark:text-emerald-300 px-2 py-1 rounded text-xs font-bold tabular-nums">${l.weight}кг × ${l.reps}</span>`).join('')}
-              </div>
+        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="openAddExerciseModal()">+ Добавить упражнение</button>
+    </div>
+
+    <!-- 4. Все упражнения (Стек) -->
+    <div id="exercises-screen" class="screen">
+        <div class="header"><h1>База упражнений</h1></div>
+        <div id="all-exercises-list"></div>
+    </div>
+
+    <!-- 5. Настройки -->
+    <div id="settings-screen" class="screen">
+        <div class="header"><h1>Настройки</h1></div>
+        <div class="ex-card">
+            <h3 style="margin-top:0;">Оформление</h3>
+            <div class="form-group" style="margin:0;">
+                <select id="theme-select" onchange="changeTheme(this.value)">
+                    <option value="dark">Темная тема</option>
+                    <option value="light">Светлая тема</option>
+                </select>
             </div>
-          `;
+        </div>
+        <div class="ex-card">
+            <h3 style="margin-top:0;">Профиль</h3>
+            <div class="form-group"><label>Имя</label><input type="text" id="set-name"></div>
+            <div class="form-group"><label>Вес (кг)</label><input type="number" id="set-weight"></div>
+            <button class="btn btn-primary" onclick="updateProfile()">Обновить данные</button>
+        </div>
+        <div class="ex-card">
+            <p style="font-size: 13px; color: #51CF66; font-weight: bold; margin-top:0;">● Связь с Google Диском активна</p>
+            <button class="btn btn-secondary" onclick="logout()">Выйти из аккаунта</button>
+        </div>
+    </div>
+
+    <!-- Таймер (Всегда виден кроме логина) -->
+    <div class="timer-bar" id="app-timer">
+        <div class="timer-info">
+            <span class="timer-label">Отдых</span>
+            <span class="timer-time" id="timerDisplay">00:00</span>
+        </div>
+        <button class="timer-btn" id="timerAction" onclick="toggleTimer()">СТАРТ</button>
+    </div>
+
+    <!-- Навигация -->
+    <div class="nav-bar" id="bottom-nav" style="display: none;">
+        <div class="nav-item active" onclick="switchTab('calendar-screen', this)"><span>📅</span>Календарь</div>
+        <div class="nav-item" onclick="switchTab('exercises-screen', this)"><span>📚</span>Упражнения</div>
+        <div class="nav-item" onclick="switchTab('settings-screen', this)"><span>⚙️</span>Настройки</div>
+    </div>
+
+    <!-- Модалка добавления подхода -->
+    <div id="set-modal" class="modal-overlay">
+        <div class="modal">
+            <h3 id="modal-title">Подход</h3>
+            <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                <input type="number" id="modal-weight" placeholder="Вес, кг" style="flex:1; padding: 14px; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; outline: none; font-size: 16px; text-align: center;">
+                <input type="number" id="modal-reps" placeholder="Повторы" style="flex:1; padding: 14px; background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 8px; outline: none; font-size: 16px; text-align: center;">
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary" onclick="closeModals()">Отмена</button>
+                <button class="btn btn-primary" onclick="saveSet()">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка выбора упражнения в день -->
+    <div id="add-ex-modal" class="modal-overlay">
+        <div class="modal">
+            <h3>Добавить в этот день</h3>
+            <div class="form-group">
+                <select id="new-ex-select">
+                    <!-- Заполняется JS -->
+                </select>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary" onclick="closeModals()">Отмена</button>
+                <button class="btn btn-primary" onclick="addExerciseToDay()">Добавить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================================
+        // ТВОЙ РАБОЧИЙ CLIENT ID (Уже вставлен!)
+        // =========================================================
+        const GOOGLE_CLIENT_ID = '932402711939-e56mamqb7ls024p6j2amcqlnpv5bldtk.apps.googleusercontent.com';
+        const DRIVE_FILE_NAME = 'forma_app_data.json';
+        
+        let accessToken = null;
+        let driveFileId = null;
+        let activeExercise = null;
+        
+        const DAYS = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+        let currentDay = 'Пн';
+
+        // Структура базы данных по умолчанию
+        let appData = {
+            profile: {},
+            history: {},
+            theme: 'dark',
+            split: {
+                'Пн': ["Жим штанги лежа", "Рычажный жим на грудь", "Трицепс на блоке", "Жим ногами", "Скручивания на пресс"],
+                'Вт': ["Вертикальная тяга блока", "Горизонтальная тяга", "Подъем штанги на бицепс"],
+                'Ср': [],
+                'Чт': ["Наклонный жим гантелей", "Армейский жим", "Махи гантелями в стороны", "Французский жим"],
+                'Пт': ["Тяга Т-грифа", "Молотки с гантелями", "Румынская тяга", "Сгибание ног сидя"],
+                'Сб': [],
+                'Вс': []
+            }
+        };
+
+        const EXERCISES_DB = [
+            "Жим штанги лежа", "Наклонный жим гантелей", "Рычажный жим на грудь", "Сведение рук в кроссовере",
+            "Вертикальная тяга блока", "Горизонтальная тяга", "Тяга Т-грифа", "Подтягивания",
+            "Армейский жим", "Махи гантелями в стороны", "Махи в кроссовере на заднюю дельту",
+            "Подъем штанги на бицепс", "Молотки с гантелями", "Трицепс на блоке", "Французский жим",
+            "Приседания со штангой", "Жим ногами", "Румынская тяга", "Сгибание ног сидя", "Скручивания на пресс"
+        ].sort();
+
+        // Слоганы
+        const slogans = [
+            "Дисциплина решает всё.", "Боль — это временно. Результат — навсегда.",
+            "Прогресс начинается там, где заканчивается зона комфорта.", "Слабость уходит через пот.",
+            "Сравнивай себя только с тем, кем ты был вчера.", "Каждый подход делает тебя лучше."
+        ];
+        function changeSlogan() { document.getElementById('slogan-text').innerText = slogans[Math.floor(Math.random() * slogans.length)]; }
+        changeSlogan();
+
+        // UI Навигация
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+            
+            const isMainApp = ['calendar-screen', 'exercises-screen', 'settings-screen'].includes(screenId);
+            document.getElementById('bottom-nav').style.display = isMainApp ? 'flex' : 'none';
+            document.getElementById('app-timer').style.display = isMainApp ? 'flex' : 'none';
         }
 
-        const cardClass = isGreen 
-          ? 'bg-emerald-50 dark:bg-emerald-950/20 border-l-4 border-emerald-500 dark:border-emerald-600 border-y border-r border-gray-200 dark:border-gray-800 rounded-xl p-4 cursor-pointer transition-transform active:scale-[0.98]'
-          : 'bg-rose-50 dark:bg-rose-950/20 border-l-4 border-rose-400 dark:border-rose-900 border-y border-r border-gray-200 dark:border-gray-800 rounded-xl p-4 cursor-pointer transition-transform active:scale-[0.98]';
+        function switchTab(screenId, element) {
+            showScreen(screenId);
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            
+            if(screenId === 'calendar-screen') renderDay();
+            if(screenId === 'exercises-screen') renderAllExercises();
+            if(screenId === 'settings-screen') fillSettings();
+        }
 
-        const badgeClass = isGreen
-          ? 'bg-emerald-200 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300'
-          : 'bg-rose-200 dark:bg-rose-900/50 text-rose-800 dark:text-rose-300';
-        const badgeText = isGreen ? '● Освоено' : '● Нет записей';
+        function changeTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            document.getElementById('theme-select').value = theme;
+            appData.theme = theme;
+            backgroundSave();
+        }
 
-        return `
-          <div class="${cardClass}" onclick="openSetModal('${ex.id}', '${ex.name}')">
-            <div class="flex items-start justify-between mb-1">
-              <div>
-                <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider bg-gray-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 mr-1">${ex.category}</span>
-                <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider ${badgeClass}">${badgeText}</span>
-              </div>
-            </div>
-            <h3 class="text-sm font-extrabold text-gray-900 dark:text-gray-100">${ex.name}</h3>
-            ${contentHtml}
-          </div>
-        `;
-      }).join('');
-    }
+        // ================= GOOGLE API & OAUTH =================
+        let tokenClient;
+        window.onload = function () {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: GOOGLE_CLIENT_ID,
+                scope: 'https://www.googleapis.com/auth/drive.file',
+                callback: (tokenResponse) => {
+                    if (tokenResponse && tokenResponse.access_token) {
+                        accessToken = tokenResponse.access_token;
+                        syncWithDrive();
+                    }
+                },
+            });
 
-    // =========================================================================
-    // MODAL LOGIC
-    // =========================================================================
-    window.openSetModal = function(exId, exName) {
-      activeModalExId = exId;
-      document.getElementById('modalExTitle').textContent = exName;
-      document.getElementById('modalInputWeight').value = '';
-      document.getElementById('modalInputReps').value = '';
-      document.getElementById('modal-add-set').classList.remove('hidden');
-    };
+            const savedToken = sessionStorage.getItem('gapi_token');
+            if(savedToken) {
+                accessToken = savedToken;
+                syncWithDrive();
+            }
+        };
 
-    window.closeSetModal = function() {
-      document.getElementById('modal-add-set').classList.add('hidden');
-      activeModalExId = null;
-    };
+        function authWithGoogle() { tokenClient.requestAccessToken(); }
 
-    window.saveSetRecord = function() {
-      const w = parseFloat(document.getElementById('modalInputWeight').value);
-      const r = parseInt(document.getElementById('modalInputReps').value);
-      
-      if (!w || !r) return alert('Укажи вес и повторения');
+        function logout() {
+            accessToken = null;
+            sessionStorage.removeItem('gapi_token');
+            appData = { profile: {}, history: {}, split: {}, theme: 'dark' };
+            showScreen('login-screen');
+        }
 
-      if (!appState.logs[activeModalExId]) {
-        appState.logs[activeModalExId] = [];
-      }
+        // ================= ЛОГИКА ДИСКА =================
+        function showLoader(show, text = 'Загрузка данных...') { 
+            document.getElementById('loader-text').innerText = text;
+            document.getElementById('loader').style.display = show ? 'flex' : 'none'; 
+        }
 
-      const dateStr = new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' });
-      appState.logs[activeModalExId].push({ date: dateStr, weight: w, reps: r, ts: Date.now() });
+        function indicateSync() {
+            const dot = document.querySelector('.sync-dot');
+            dot.style.background = '#FF6B00'; // Оранжевый во время сохранения
+            setTimeout(() => { dot.style.background = '#51CF66'; }, 1000); // Зеленый после
+        }
 
-      closeSetModal();
-      renderExercises();
-      
-      // Async save to Drive
-      saveToDrive();
-    };
+        async function syncWithDrive() {
+            showLoader(true, 'Поиск профиля в облаке...');
+            sessionStorage.setItem('gapi_token', accessToken);
+            
+            try {
+                let query = encodeURIComponent(`name='${DRIVE_FILE_NAME}' and trashed=false`);
+                let searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${query}&spaces=drive`, {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+                let searchData = await searchRes.json();
+                
+                if (searchData.files && searchData.files.length > 0) {
+                    driveFileId = searchData.files[0].id;
+                    let fileRes = await fetch(`https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`, {
+                        headers: { 'Authorization': `Bearer ${accessToken}` }
+                    });
+                    let text = await fileRes.text();
+                    if(text) {
+                        const loadedData = JSON.parse(text);
+                        appData = { ...appData, ...loadedData }; // Мержим дефолт с облаком
+                    }
+                    if(appData.theme) changeTheme(appData.theme);
+                    checkDataState();
+                } else {
+                    checkDataState(); // Направит на онбординг
+                }
+            } catch (e) {
+                console.error("Drive Error:", e);
+                alert("Ошибка синхронизации. Проверьте права.");
+                logout();
+            }
+            showLoader(false);
+        }
 
-    // =========================================================================
-    // SETTINGS LOGIC
-    // =========================================================================
-    window.toggleTheme = function() {
-      document.documentElement.classList.toggle('dark');
-    };
+        // Тихое сохранение на фоне
+        async function backgroundSave() {
+            if (!accessToken) return;
+            indicateSync();
+            
+            const metadata = { name: DRIVE_FILE_NAME, mimeType: 'application/json' };
+            const fileContent = JSON.stringify(appData);
+            
+            let form = new FormData();
+            form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+            form.append('file', new Blob([fileContent], { type: 'application/json' }));
 
-    function populateSettingsForm() {
-      const p = appState.profile;
-      if(!p) return;
-      document.getElementById('setpName').value = p.name || '';
-      document.getElementById('setpAge').value = p.age || '';
-      document.getElementById('setpHeight').value = p.height || '';
-      document.getElementById('setpWeight').value = p.weight || '';
-    }
+            try {
+                if (driveFileId) {
+                    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=multipart`, {
+                        method: 'PATCH', headers: { 'Authorization': `Bearer ${accessToken}` }, body: form
+                    });
+                } else {
+                    let res = await fetch(`https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`, {
+                        method: 'POST', headers: { 'Authorization': `Bearer ${accessToken}` }, body: form
+                    });
+                    let data = await res.json();
+                    driveFileId = data.id;
+                }
+            } catch (e) { console.error("Save Error", e); }
+        }
 
-    window.saveSettingsProfile = function() {
-      appState.profile = {
-        name: document.getElementById('setpName').value,
-        age: document.getElementById('setpAge').value,
-        height: document.getElementById('setpHeight').value,
-        weight: document.getElementById('setpWeight').value,
-        goal: appState.profile.goal // keep existing
-      };
-      alert('Параметры обновлены локально. Сохраняем на Диск...');
-      saveToDrive();
-    };
+        // ================= ЛОГИКА ИНТЕРФЕЙСА =================
+        function checkDataState() {
+            if (!appData.profile || !appData.profile.name) {
+                showScreen('onboarding-screen');
+            } else {
+                renderCalendarBar();
+                showScreen('calendar-screen');
+                renderDay();
+            }
+        }
 
-    window.logout = function() {
-      sessionStorage.removeItem('forma_gtoken');
-      if (accessToken) {
-        google.accounts.oauth2.revoke(accessToken, () => {
-          location.reload();
-        });
-      } else {
-        location.reload();
-      }
-    };
-  </script>
+        function completeOnboarding() {
+            const name = document.getElementById('reg-name').value;
+            if(!name) return alert("Введите имя");
+            
+            appData.profile = {
+                name: name,
+                age: document.getElementById('reg-age').value,
+                height: document.getElementById('reg-height').value,
+                weight: document.getElementById('reg-weight').value
+            };
+            showLoader(true, 'Создание файла на Диске...');
+            backgroundSave().then(() => {
+                showLoader(false);
+                checkDataState();
+            });
+        }
+
+        // Рендер горизонтального календаря
+        function renderCalendarBar() {
+            const bar = document.getElementById('calendar-days');
+            bar.innerHTML = '';
+            DAYS.forEach(day => {
+                const div = document.createElement('div');
+                div.className = `day-chip ${day === currentDay ? 'active' : ''}`;
+                div.innerText = day;
+                div.onclick = () => { 
+                    currentDay = day; 
+                    renderCalendarBar(); 
+                    renderDay(); 
+                };
+                bar.appendChild(div);
+            });
+            document.getElementById('current-day-title').innerText = currentDay;
+        }
+
+        // Рендер карточек упражнений (универсальный для Дня и Стека)
+        function createExerciseCard(ex, isDayView = false) {
+            const history = appData.history[ex] || [];
+            const isGreen = history.length > 0;
+            
+            let historyHtml = '';
+            if (isGreen) {
+                const last5 = history.slice(-5).reverse();
+                historyHtml = '<div class="ex-history">';
+                last5.forEach(s => {
+                    historyHtml += `<div class="history-row"><span>${new Date(s.date).toLocaleDateString('ru-RU')}</span> <b>${s.w} кг × ${s.r}</b></div>`;
+                });
+                historyHtml += '</div>';
+            }
+
+            let removeBtn = isDayView ? `<button class="ex-remove" onclick="event.stopPropagation(); removeExercise('${ex}')">✕</button>` : '';
+
+            return `
+                <div class="ex-card ${isGreen ? 'status-green' : 'status-red'}" onclick="openSetModal('${ex}')">
+                    ${removeBtn}
+                    <div class="ex-header">
+                        <h3 class="ex-title">${ex}</h3>
+                        <span class="ex-badge">${isGreen ? '● Освоено' : '● Нет записей'}</span>
+                    </div>
+                    <div style="font-size:12px; color:var(--text-muted);">${isGreen ? 'Нажмите, чтобы добавить подход' : 'Нажмите для первой записи'}</div>
+                    ${historyHtml}
+                </div>
+            `;
+        }
+
+        function renderDay() {
+            const list = document.getElementById('day-exercises-list');
+            const dayExs = appData.split[currentDay] || [];
+            
+            if(dayExs.length === 0) {
+                list.innerHTML = '<div style="text-align:center; padding:40px 20px; color:var(--text-muted); font-weight:600; border: 1px dashed var(--border); border-radius: var(--radius);">Отдых или добавьте упражнения</div>';
+            } else {
+                list.innerHTML = dayExs.map(ex => createExerciseCard(ex, true)).join('');
+            }
+        }
+
+        function renderAllExercises() {
+            const list = document.getElementById('all-exercises-list');
+            list.innerHTML = EXERCISES_DB.map(ex => createExerciseCard(ex, false)).join('');
+        }
+
+        // Модалки
+        function openSetModal(ex) {
+            activeExercise = ex;
+            document.getElementById('modal-title').innerText = ex;
+            document.getElementById('modal-weight').value = '';
+            document.getElementById('modal-reps').value = '';
+            document.getElementById('set-modal').style.display = 'flex';
+        }
+
+        function openAddExerciseModal() {
+            const select = document.getElementById('new-ex-select');
+            select.innerHTML = EXERCISES_DB.map(ex => `<option value="${ex}">${ex}</option>`).join('');
+            document.getElementById('add-ex-modal').style.display = 'flex';
+        }
+
+        function closeModals() {
+            document.getElementById('set-modal').style.display = 'none';
+            document.getElementById('add-ex-modal').style.display = 'none';
+        }
+
+        // Действия с данными
+        function saveSet() {
+            const w = parseFloat(document.getElementById('modal-weight').value);
+            const r = parseInt(document.getElementById('modal-reps').value);
+            if (!w || !r) return alert("Введите вес и повторы");
+
+            if (!appData.history[activeExercise]) appData.history[activeExercise] = [];
+            appData.history[activeExercise].push({ date: new Date().toISOString(), w: w, r: r });
+
+            closeModals();
+            
+            // Обновляем нужный экран
+            if(document.getElementById('calendar-screen').classList.contains('active')) renderDay();
+            if(document.getElementById('exercises-screen').classList.contains('active')) renderAllExercises();
+            
+            backgroundSave();
+            
+            // Авто-рестарт таймера отдыха
+            if(timerInterval) { time = 0; }
+        }
+
+        function addExerciseToDay() {
+            const ex = document.getElementById('new-ex-select').value;
+            if(!appData.split[currentDay]) appData.split[currentDay] = [];
+            
+            if(!appData.split[currentDay].includes(ex)) {
+                appData.split[currentDay].push(ex);
+                backgroundSave();
+            }
+            closeModals();
+            renderDay();
+        }
+
+        function removeExercise(ex) {
+            if(confirm(`Убрать "${ex}" из расписания на ${currentDay}? (История подходов останется в Базе)`)) {
+                appData.split[currentDay] = appData.split[currentDay].filter(e => e !== ex);
+                backgroundSave();
+                renderDay();
+            }
+        }
+
+        function fillSettings() {
+            document.getElementById('set-name').value = appData.profile.name || '';
+            document.getElementById('set-weight').value = appData.profile.weight || '';
+        }
+
+        function updateProfile() {
+            appData.profile.name = document.getElementById('set-name').value;
+            appData.profile.weight = document.getElementById('set-weight').value;
+            backgroundSave();
+            alert("Данные профиля обновлены");
+        }
+
+        // ================= ТАЙМЕР ОТДЫХА =================
+        let timerInterval;
+        let time = 0;
+        function toggleTimer() {
+            const btn = document.getElementById('timerAction');
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+                btn.innerText = "СТАРТ";
+                btn.style.background = "var(--text)";
+                btn.style.color = "var(--bg)";
+            } else {
+                btn.innerText = "ПАУЗА";
+                btn.style.background = "var(--primary)";
+                btn.style.color = "white";
+                timerInterval = setInterval(() => {
+                    time++;
+                    let m = Math.floor(time / 60).toString().padStart(2, '0');
+                    let s = (time % 60).toString().padStart(2, '0');
+                    document.getElementById('timerDisplay').innerText = `${m}:${s}`;
+                }, 1000);
+            }
+        }
+    </script>
 </body>
 </html>
